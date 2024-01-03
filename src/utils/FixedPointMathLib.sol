@@ -39,8 +39,12 @@ library FixedPointMathLib {
         uint256 denominator
     ) internal pure returns (uint256 z) {
         /// @solidity memory-safe-assembly
+        // Assembly => uses Solidity's inline assembly (assembly { ... }) to write low-level 
+                    //code that directly interacts with the Ethereum Virtual Machine (EVM).
         assembly {
             // Equivalent to require(denominator != 0 && (y == 0 || x <= type(uint256).max / y))
+            //gt(x, div(MAX_UINT256, y)): Checks if x is greater than the result of dividing the 
+            //maximum uint256 value by y. This checks for potential overflow in the multiplication x * y.
             if iszero(mul(denominator, iszero(mul(y, gt(x, div(MAX_UINT256, y)))))) {
                 revert(0, 0)
             }
@@ -62,8 +66,13 @@ library FixedPointMathLib {
                 revert(0, 0)
             }
 
-            // If x * y modulo the denominator is strictly greater than 0,
-            // 1 is added to round up the division of x * y by the denominator.
+            
+            //z := add(gt(mod(mul(x, y), denominator), 0), div(mul(x, y), denominator)) mul(x, y): Calculates the product of x and y.
+            //mod(mul(x, y), denominator): Computes the remainder when x * y is divided by denominator.
+            //gt(mod(mul(x, y), denominator), 0): Checks if the remainder is strictly greater than 0. If so, it returns 1; otherwise, it returns 0
+            //div(mul(x, y), denominator): Performs the division of x * y by denominator, discarding any fractional part.
+            //add(gt(mod(mul(x, y), denominator), 0), div(mul(x, y), denominator)): Adds 1 to the division result if there's a non-zero remainder-
+            //(rounding up the division) and returns the final result.
             z := add(gt(mod(mul(x, y), denominator), 0), div(mul(x, y), denominator))
         }
     }
